@@ -23,9 +23,14 @@ class App extends Component {
 
   refreshList = () => {
     axios
-      .get("/api/todos/")
-      .then((res) => this.setState({ todoList: res.data }))
-      .catch((err) => console.log(err));
+      .get("https://topoapp-react.onrender.com/api/todos/")
+      .then((res) => {
+        this.setState({ todoList: res.data || [] });
+      })
+      .catch((err) => {
+        console.error("Failed to fetch todos:", err);
+        this.setState({ todoList: [] });
+      });
   };
 
   toggle = () => {
@@ -37,37 +42,32 @@ class App extends Component {
 
     if (item.id) {
       axios
-        .put(`/api/todos/${item.id}/`, item)
+        .put(`https://topoapp-react.onrender.com/api/todos/${item.id}/`, item)
         .then((res) => this.refreshList());
       return;
     }
     axios
-      .post("/api/todos/", item)
+      .post("https://topoapp-react.onrender.com/api/todos/", item)
       .then((res) => this.refreshList());
   };
 
   handleDelete = (item) => {
     axios
-      .delete(`/api/todos/${item.id}/`)
+      .delete(`https://topoapp-react.onrender.com/api/todos/${item.id}/`)
       .then((res) => this.refreshList());
   };
 
   createItem = () => {
     const item = { title: "", description: "", completed: false };
-
-    this.setState({ activeItem: item, modal: !this.state.modal });
+    this.setState({ activeItem: item, modal: true });
   };
 
   editItem = (item) => {
-    this.setState({ activeItem: item, modal: !this.state.modal });
+    this.setState({ activeItem: item, modal: true });
   };
 
   displayCompleted = (status) => {
-    if (status) {
-      return this.setState({ viewCompleted: true });
-    }
-
-    return this.setState({ viewCompleted: false });
+    this.setState({ viewCompleted: status });
   };
 
   renderTabList = () => {
@@ -90,8 +90,13 @@ class App extends Component {
   };
 
   renderItems = () => {
-    const { viewCompleted } = this.state;
-    const newItems = this.state.todoList.filter(
+    const { viewCompleted, todoList } = this.state;
+
+    if (!Array.isArray(todoList)) {
+      return <li className="list-group-item">Loading tasks...</li>;
+    }
+
+    const newItems = todoList.filter(
       (item) => item.completed === viewCompleted
     );
 
